@@ -48,6 +48,9 @@
     let px, py;
 
     function setup() {
+      // Bloque le comportement par défaut du navigateur mobile
+document.body.addEventListener('touchstart', e => e.preventDefault(), { passive: false });
+document.body.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
       createCanvas(windowWidth, windowHeight);
       background(255);
       stroke(20);
