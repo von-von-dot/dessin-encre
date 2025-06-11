@@ -1,26 +1,33 @@
-
 <!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>Dessin à l'encre</title>
   <meta name="theme-color" content="#ffffff"/>
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="icon-192.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <title>Dessin à l'encre</title>
   <style>
-    body, html { margin:0; padding:0; overflow:hidden; background:#fff; touch-action:none; }
-    canvas { display:block; }
+    body, html {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: #fff;
+      touch-action: none;
+    }
+    canvas {
+      display: block;
+    }
     #controls {
       position: fixed;
       top: 10px;
       right: 10px;
-      background: rgba(255,255,255,0.85);
+      background: rgba(255, 255, 255, 0.85);
       padding: 10px;
       border-radius: 5px;
-      box-shadow: 0 0 5px rgba(0,0,0,0.2);
+      box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
       display: flex;
       flex-direction: column;
       gap: 10px;
@@ -48,42 +55,53 @@
     let px, py;
 
     function setup() {
-      // Bloque le comportement par défaut du navigateur mobile
-document.body.addEventListener('touchstart', e => e.preventDefault(), { passive: false });
-document.body.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
       createCanvas(windowWidth, windowHeight);
       background(255);
-      stroke(20);
+      stroke(0);
       strokeCap(ROUND);
 
       document.getElementById('erase').addEventListener('click', () => background(255));
       document.getElementById('save').addEventListener('click', () => saveCanvas('dessin_encre', 'png'));
+
+      // Empêche scroll/zoom sur mobile
+      document.body.addEventListener('touchstart', e => e.preventDefault(), { passive: false });
+      document.body.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
     }
 
     function draw() {}
 
     function touchMoved() {
-  if (px !== undefined && py !== undefined) {
-    let speed = dist(touchX, touchY, px, py);
-    let weight = map(speed, 0, 20, 4, 0.5);
-    strokeWeight(weight + random(-0.2, 0.2));
-    let offsetX = random(-0.3, 0.3);
-    let offsetY = random(-0.3, 0.3);
-    line(px + offsetX, py + offsetY, touchX + offsetX, touchY + offsetY);
+      if (px !== undefined && py !== undefined) {
+        let speed = dist(touchX, touchY, px, py);
+        let baseWeight = map(speed, 0, 20, 4, 0.5);
 
-    if (random(1) < 0.07) {
-      strokeWeight(weight / 2);
-      line(px + offsetX + 1, py + offsetY + 1, touchX + offsetX + 1, touchY + offsetY + 1);
+        for (let i = 0; i < 3; i++) {
+          let jitterX = random(-0.8, 0.8);
+          let jitterY = random(-0.8, 0.8);
+          strokeWeight(baseWeight + random(-0.3, 0.3));
+          line(px + jitterX, py + jitterY, touchX + jitterX, touchY + jitterY);
+        }
+
+        // petit effet "goutte" à la pointe
+        noStroke();
+        fill(0, 30);
+        ellipse(touchX, touchY, 3, 3);
+        stroke(0);
+      }
+
+      px = touchX;
+      py = touchY;
+      return false;
     }
 
-    // 🔵 Retour visuel : petit cercle à la pointe
-    noStroke();
-    fill(0, 60); // encre translucide
-    ellipse(touchX, touchY, 5, 5);
-    stroke(20); // réactiver le trait
-  }
+    function touchEnded() {
+      px = undefined;
+      py = undefined;
+    }
 
-  px = touchX;
-  py = touchY;
-  return false;
-}
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js');
+    }
+  </script>
+</body>
+</html>
